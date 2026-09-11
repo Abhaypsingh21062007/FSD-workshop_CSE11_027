@@ -6,14 +6,14 @@ import cors from "cors";
 const port=3000;
 const app=express();
 const userData=[
-    {      
-
-    },
 ];
 
 const registerData=[
 
 ];
+
+app.use(express.json());
+app.use(cors());
 
 app.get("/",(req,res)=>{
     res.status(200).json({
@@ -22,30 +22,49 @@ app.get("/",(req,res)=>{
 });
 
 app.get("/user",(req,res)=>{
-    res.status(200).json({
-        users: userData
-    });
-});
-
-app.get("/register",(req,res)=>{
-    res.status(200).json({
-        users: registerData
-    });
-});
-
-app.get("/user/:id",(req,res)=>{
-    const userId=parseInt(req.params.id);
-    const user=userData.find(user=>user.id===userId);
-    if (user) {
+    try {
         res.status(200).json({
-            user: user
+            users: userData
         });
-    } else {
-        res.status(404).json({
-            message: "User not found"
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error"
         });
     }
 });
+
+app.get("/msg",(req,res)=>{
+    res.status(200).json({
+        message: "Hello from server"
+    });
+});
+
+app.get("/user/:id", (req, res) => {
+    try {
+        const id = req.params.id;
+
+        const user = userData.find((u) => u.id == id);
+
+        if (user) {
+            return res.status(200).json({
+                message: "Data received",
+                user
+            });
+        }
+
+        return res.status(404).json({
+            message: "User not found"
+        });
+
+    } catch (err) {
+        console.error("Error:", err.message);
+
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+});
+
 
 app.post("/create",(req,res)=>{
     const {id,name,class:className}=req.body;

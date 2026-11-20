@@ -1,149 +1,172 @@
 import express from "express";
-//import dotev from "dotenv";
-import cors from "cors";
-//dotev.config();
-//const port=process.env.PORT || 3000;
-const port=3000;
-const app=express();
-const userData=[
+import cors from 'cors';
+import dotenv from 'dotenv';
+import connectDB from './db.js';
+import Student from "./Models/students.js";
+dotenv.config();
+connectDB();
+
+const app=express()
+const port=7000
+app.use(express.json())
+const arr = [
+    {
+        id: 111,
+        name: "ABhi",
+        dept: "Cse",
+        classs: "Cse11",
+    },
+    {
+        id: 102,
+        name: "Abhitansu",
+        dept: "Cse",
+        classs: "Cse11",
+    },
+    {
+        id: 101,
+        name: "sonkar",
+        dept: "Cse",
+        classs: "Cse13",
+    },
 ];
-
-const registerData=[
-
-];
-
-app.use(express.json());
-app.use(cors());
-
+const registeredData=[];
 app.get("/",(req,res)=>{
-    res.status(200).json({
-        message:"Welcome user",
-    });
-});
 
+    res.status(200).json({
+        message:"Welcome to Server",
+        arr
+    })
+})
 app.get("/user",(req,res)=>{
-    try {
+    try{
         res.status(200).json({
-            users: userData
-        });
-    } catch (error) {
-        res.status(500).json({
-            message: "Internal server error"
-        });
+        message:"Welcome to Server",
+        arr
+    })
     }
-});
-
-app.get("/msg",(req,res)=>{
-    res.status(200).json({
-        message: "Hello from server"
-    });
-});
-
-app.get("/user/:id", (req, res) => {
-    try {
-        const id = req.params.id;
-
-        const user = userData.find((u) => u.id == id);
-
-        if (user) {
-            return res.status(200).json({
-                message: "Data received",
-                user
-            });
-        }
-
-        return res.status(404).json({
-            message: "User not found"
-        });
-
-    } catch (err) {
-        console.error("Error:", err.message);
-
-        return res.status(500).json({
-            message: "Internal server error"
-        });
+    catch(error){
+        console.log(`error found: ${error}`)
     }
-});
+})
 
 
 app.post("/create",(req,res)=>{
-    const {id,name,class:className}=req.body;
-    const newUser={
-        id,
-        name,
-        class:className,
-    };
-    userData.push(newUser);
-    res.status(201).json({  
-        message: "User created successfully",
-        user: newUser
-    });
-});
-
-app.put("/edit/:id",(req,res)=>{
-    const userId=parseInt(req.params.id);
-    const index=userData.findIndex(user=>user.id===userId);
-    if (index !== -1) {
-        const {name,class:className}=req.body;
-        userData[index]={
-            ...userData[index],
+    try{
+        const{id,name,dept,classs}=req.body;
+        const newUser={
+            id,
             name,
-            class:className
+            dept,
+            classs,
         };
-        res.status(200).json({
-            message: "User updated successfully",
-            user: userData[index]
-        });
-    } else {
-        res.status(404).json({
-            message: "User not found"
-        });
+        arr.push(newUser);
+        res.status(200).json({message:"user created sucessfully",newUser});
+    }catch(error){
+        console.log(`Error message ${error}`)
     }
-});
-
-app.delete("/delete/:id",(req,res)=>{
-    const userId=parseInt(req.params.id);
-    const index=userData.findIndex(user=>user.id===userId);
-    if (index !== -1) {
-        userData.splice(index,1);
-        res.status(200).json({
-            message: "User deleted successfully"
-        });
-    } else {
-        res.status(404).json({
-            message: "User not found"
-        });
-    }
-});
-
-app.post("/register",(req,res)=>{
-    const {username,password}=req.body;
-    const newUser={
-        username,
-        password
-    };
-    registerData.push(newUser);
-    res.status(201).json({
-        message: "User registered successfully",
-        user: newUser
+})
+app.get("/registered",(req,res)=>{
+    res.status(200).json({
+        users:registeredData,
     });
+    // res.end(JSON.stringify(arr))
 });
+// app.get("/registered",(res,req)={
 
-app.post("/login",(req,res)=>{
-    const {username,password}=req.body;
-    const user=registerData.find(user=>user.username===username && user.password===password);
-    if (user) {
-        res.status(200).json({
-            message: "Login successful",
-            user: user
+// // })
+// app.delete()
+
+app.post("/test-db", async (req, res) => {
+    try {
+        const student = await Student.create({
+            name: "Rahul Sharma",
+            email: "rahul@gmail.com",
+            course: "MERN Stack",
         });
-    } else {
-        res.status(401).json({
-            message: "Invalid credentials"
+
+        res.status(201).json({
+            message: "Data inserted successfully!",
+            data: student,
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
         });
     }
 });
 
-app.listen(port,()=>{
-    console.log(`Server is running on port ${port}`);
+
+app.get("/test-db",async (req,res)=>{
+    try {
+        const students=await Student.find();
+        res.status(200).json(students);
+    }
+    catch(error){
+        res.status(500).json({
+            message:error.message
+        });
+    }
 });
+
+
+app.get("/user/:id",(req,res)=>{
+    try{
+    const id=req.params.id;
+    const search=arr.find((u)=>u.id==id);
+    if(!search){
+        return res.status(404).json({message:"Not found in array"});
+    }
+    // arr.splice(userId,1);
+    arr.slice(id,1)
+    return res.status(200).json({message:"Executed",id})
+}
+catch(error){
+    console.log(`Message : ${error}`)
+}
+})
+app.put("/edit/:id",(req,res)=>{
+    try{
+    const id=parseInt(req.params.id);
+    const {name,dept,classs}=req.body;
+    const search=arr.findIndex((u)=>u.id==id);
+    if(search==-1){
+        return res.status(404).json({message:"Not found in array"});
+    }
+    arr[search]={
+        id:arr.length+1,
+        name,
+        dept,
+        classs
+    }
+}
+catch(error){
+    console.log(`Message : ${error}`)
+}
+})
+app.get("/userByid/:id",(req,res)=>{
+    
+    try {
+        const id=(req.params.id)
+        const use=arr.find((u)=> {
+            return u.id==id;
+        })
+        if(!use){
+            res.status(404).json({
+                message:"user not found"
+            })
+        }
+        else{
+            res.status(200).json({
+                message:"user found",
+                use
+            })
+        }
+        
+    } catch (error) {
+        console.group(`message : ${error}`)
+    }
+})
+app.listen(port,()=>{
+    console.log(`running on server ${port}`)
+})
